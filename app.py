@@ -411,8 +411,27 @@ def convert():
         if not os.path.exists(user_folder): os.makedirs(user_folder)
         
         filepath = os.path.join(user_folder, filename)
-        dl_cmd = ['yt-dlp', '-x', '--audio-format', 'mp3', '--audio-quality', '0', '-o', filepath, '--no-warnings', '--quiet', '--max-filesize', limit_mb, video_url]
-        subprocess.run(dl_cmd, check=True)
+        dl_cmd = [
+    'yt-dlp',
+    '--ffmpeg-location', '/usr/bin',
+    '-x',
+    '--audio-format', 'mp3',
+    '--audio-quality', '0',
+    '-o', filepath,
+    video_url
+]
+
+res = subprocess.run(
+    dl_cmd,
+    capture_output=True,
+    text=True
+)
+
+print("STDOUT:", res.stdout)
+print("STDERR:", res.stderr)
+
+if res.returncode != 0:
+    raise Exception(res.stderr)
 
         users = load_users()
         users[str(current_user.id)]['points'] += 1
