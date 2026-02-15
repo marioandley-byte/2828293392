@@ -486,8 +486,25 @@ def admin_del_file():
         return jsonify({'success':True})
     return jsonify({'error':'File not found'}), 404
 
-if __name__ == '__main__':
-    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
-        try: threading.Thread(target=run_telegram_bot, daemon=True).start()
-        except: pass
-    socketio.run(app, debug=True, port=5000)
+if __name__ == "__main__":
+    import os
+
+    port = int(os.environ.get("PORT", 8080))
+
+    # Jalankan bot Telegram di thread terpisah
+    try:
+        threading.Thread(
+            target=run_telegram_bot,
+            daemon=True
+        ).start()
+    except Exception as e:
+        print("Telegram bot gagal start:", e)
+
+    # Jalankan Flask + SocketIO dengan aman di Railway
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=port,
+        debug=False,
+        allow_unsafe_werkzeug=True
+    )
