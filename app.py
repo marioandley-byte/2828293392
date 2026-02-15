@@ -28,7 +28,7 @@ login_manager.login_view = "login"
 
 
 # ================== TELEGRAM ==================
-TELEGRAM_BOT_TOKEN = "ISI_TOKEN_BOT_LU"
+TELEGRAM_BOT_TOKEN = "7421057972:AAHHGD-2J6SGN6CzttiNPg6JKTj5zLOmWsA"
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN, threaded=False)
 
 
