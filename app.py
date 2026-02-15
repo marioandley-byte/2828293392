@@ -7,7 +7,6 @@ import socket
 import struct
 import threading
 import base64
-import requests 
 from datetime import datetime
 from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for, abort
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
@@ -20,8 +19,6 @@ app = Flask(__name__)
 app.secret_key = 'sampplay-secret-key-final-v3'
 
 # ============ 1. KONFIGURASI ============
-RECAPTCHA_SITE_KEY = 'MASUKKAN_SITE_KEY_GOOGLE_DISINI'
-RECAPTCHA_SECRET_KEY = 'MASUKKAN_SECRET_KEY_GOOGLE_DISINI'
 TELEGRAM_BOT_TOKEN = '7421057972:AAHHGD-2J6SGN6CzttiNPg6JKTj5zLOmWsA'
 bot = telebot.TeleBot(TELEGRAM_BOT_TOKEN, threaded=False) 
 
@@ -53,7 +50,6 @@ def init_json(file, default_data):
     if not os.path.exists(file):
         with open(file, 'w') as f: json.dump(default_data, f)
 
-# TAMBAHKAN DEFAULT ANNOUNCEMENT DI CONFIG
 init_json(USERS_FILE, {})
 init_json(SERVERS_FILE, [])
 init_json(CHAT_FILE, [])
@@ -82,7 +78,6 @@ def toggle_maintenance(message):
         save_config(cfg)
         bot.reply_to(message, "✅ WEBSITE DIBUKA KEMBALI.")
 
-# ---- FITUR BARU: ANNOUNCEMENT VIA TELEGRAM ----
 @bot.message_handler(commands=['announce'])
 def set_announcement(message):
     text = message.text.replace('/announce', '').strip()
@@ -91,7 +86,7 @@ def set_announcement(message):
     
     cfg = get_config()
     cfg['announcement'] = text
-    cfg['announcement_id'] = int(time.time()) # Timestamp unik
+    cfg['announcement_id'] = int(time.time()) 
     save_config(cfg)
     
     bot.reply_to(message, f"📢 Pengumuman berhasil disiarkan ke semua layar user:\n\n{text}")
@@ -112,13 +107,6 @@ def run_telegram_bot():
 # ============ 5. HELPERS & UTILS ============
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'webp', 'heic'}
-
-def verify_captcha(response_token):
-    if not response_token: return False
-    try:
-        r = requests.post('https://www.google.com/recaptcha/api/siteverify', data={'secret': RECAPTCHA_SECRET_KEY, 'response': response_token})
-        return r.json().get('success', False)
-    except: return False
 
 def load_users():
     with open(USERS_FILE, 'r') as f: return json.load(f)
@@ -173,7 +161,7 @@ def check_maintenance():
         if current_user.is_authenticated and current_user.is_admin: return
         return render_template('maintenance.html')
 
-# ============ 8. PERBAIKAN: LOGIKA QUERY SA-MP ============
+# ============ 8. LOGIKA QUERY SA-MP ============
 def query_samp(ip, port):
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -243,11 +231,7 @@ def login():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        captcha = request.form.get('g-recaptcha-response')
         remember = True if request.form.get('remember') == 'on' else False
-
-        if not verify_captcha(captcha):
-             return render_template('login.html', error='Captcha Salah / Belum Dicentang', site_key=RECAPTCHA_SITE_KEY)
 
         users = load_users()
         for uid, d in users.items():
@@ -256,22 +240,18 @@ def login():
                     user = User(uid, d['username'], d['password_hash'], d.get('role'), d.get('bio'), d.get('profile_pic'), d.get('points'), d.get('theme'))
                     login_user(user, remember=remember)
                     return redirect(url_for('index'))
-        return render_template('login.html', error='Login Gagal', site_key=RECAPTCHA_SITE_KEY)
-    return render_template('login.html', site_key=RECAPTCHA_SITE_KEY)
+        return render_template('login.html', error='Login Gagal')
+    return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        captcha = request.form.get('g-recaptcha-response')
-
-        if not verify_captcha(captcha):
-             return render_template('register.html', error='Captcha Salah', site_key=RECAPTCHA_SITE_KEY)
 
         users = load_users()
         for d in users.values():
-            if d['username'] == username: return render_template('register.html', error='Username sudah ada', site_key=RECAPTCHA_SITE_KEY)
+            if d['username'] == username: return render_template('register.html', error='Username sudah ada')
         
         nid = str(len(users) + 1)
         role = 'admin' if len(users) == 0 else 'member'
@@ -281,7 +261,7 @@ def register():
         user = User(nid, username, users[nid]['password_hash'], role, points=0, theme='default')
         login_user(user)
         return redirect(url_for('index'))
-    return render_template('register.html', site_key=RECAPTCHA_SITE_KEY)
+    return render_template('register.html')
 
 @app.route('/logout')
 def logout():
@@ -486,25 +466,8 @@ def admin_del_file():
         return jsonify({'success':True})
     return jsonify({'error':'File not found'}), 404
 
-if __name__ == "__main__":
-    import os
-
-    port = int(os.environ.get("PORT", 8080))
-
-    # Jalankan bot Telegram di thread terpisah
-    try:
-        threading.Thread(
-            target=run_telegram_bot,
-            daemon=True
-        ).start()
-    except Exception as e:
-        print("Telegram bot gagal start:", e)
-
-    # Jalankan Flask + SocketIO dengan aman di Railway
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=port,
-        debug=False,
-        allow_unsafe_werkzeug=True
-    )
+if __name__ == '__main__':
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        try: threading.Thread(target=run_telegram_bot, daemon=True).start()
+        except: pass
+    socketio.run(app, debug=True, port=5000)
