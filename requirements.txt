@@ -1,2 +1,6 @@
-Flask==3.0.0
-yt-dlp==2025.2.1
+Flask
+Flask-Login
+Flask-SocketIO
+pyTelegramBotAPI
+requests
+yt-dlp
