@@ -1,0 +1,20 @@
+{
+    "1": {
+        "username": "sukakamu22",
+        "password_hash": "scrypt:32768:8:1$68FhS8cdVIhr6UaF$dca539964552c5e0ff7152a0a9f634646807d968beb1547be0990784be1aef37b170307bbbbc82b7262197ba9a88b48d29c4e7edd669d456b717183b213da7da",
+        "role": "admin",
+        "bio": "ADMIN DATANG KAU DIAMM",
+        "profile_pic": "u_1_1771120752.webp",
+        "theme": "default",
+        "points": 1
+    },
+    "2": {
+        "username": "tester",
+        "password_hash": "scrypt:32768:8:1$LKCeXiYWez1xLe2R$33707403acaf359660bc1f18562b46b143fd6e846cdc531201dcf086de313646942f18c9d2d4ca356ff0450be552c46df3232380cf495eff2c81612c730620a4",
+        "role": "member",
+        "bio": "New User",
+        "profile_pic": "",
+        "points": 0,
+        "theme": "green"
+    }
+}

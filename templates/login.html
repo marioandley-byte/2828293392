@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login · SAMPPLAY</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="theme-default">
+    <div class="auth-container">
+        <div class="auth-box">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="justify-content: center; margin-bottom: 5px;">
+                    <i class="ri-disc-line" style="color: var(--accent-cyan);"></i> SAMPPLAY
+                </h1>
+                <p style="color: var(--text-secondary);">Masuk untuk melanjutkan.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <div class="input-group">
+                    <i class="ri-user-line input-icon"></i>
+                    <input type="text" name="username" class="form-input" placeholder="Username" required autofocus>
+                </div>
+                
+                <div class="input-group">
+                    <i class="ri-lock-password-line input-icon"></i>
+                    <input type="password" name="password" class="form-input" placeholder="Password" required>
+                </div>
+
+                <div style="display: flex; align-items: center; margin-bottom: 25px;">
+                    <input type="checkbox" id="remember" name="remember" style="accent-color: var(--accent-cyan); margin-right: 8px;">
+                    <label for="remember" style="color: var(--text-secondary); font-size: 0.9rem;">Ingat Saya</label>
+                </div>
+
+                {% if error %}
+                    <div class="error" style="margin-bottom: 20px; color: #ff4d4f;">
+                        <i class="ri-error-warning-line"></i> {{ error }}
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn-glow" style="width: 100%;">
+                    <i class="ri-login-box-line"></i> LOGIN
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 30px; font-size: 0.9rem;">
+                <span style="color: var(--text-secondary);">Belum punya akun?</span> 
+                <a href="{{ url_for('register') }}" style="color: var(--accent-cyan); font-weight: 600;">Daftar Sekarang</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

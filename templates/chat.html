@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Chat · SAMPPLAY</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+</head>
+<body class="theme-{{ current_user.theme }}">
+    <div class="container" style="height: 90vh; display: flex; flex-direction: column; padding: 10px;">
+        <div style="text-align: center; margin-bottom: 10px;">
+            <h2><i class="ri-discuss-line"></i> Global Chat</h2>
+        </div>
+
+        <div class="chat-container" style="flex: 1; margin-bottom: 60px;">
+            <div id="chat-box" class="chat-box"></div>
+            
+            <div class="chat-input-area" style="position:relative;">
+                <input type="file" id="chat-img-input" accept="image/*" style="display:none;" onchange="previewChatImage()">
+                
+                <button onclick="document.getElementById('chat-img-input').click()" id="btn-upload-img" class="btn-glow" style="padding: 8px; border-radius: 50%; width: 40px; height: 40px; background: transparent; border: 1px solid rgba(255,255,255,0.3); margin-right: 5px;">
+                    <i class="ri-image-add-line"></i>
+                </button>
+
+                <input type="text" id="chat-input" placeholder="Tulis pesan..." maxlength="200" autocomplete="off" onkeypress="handleChatEnter(event)">
+                
+                <button onclick="sendChatMessage()" class="btn-glow" style="padding: 8px; border-radius: 50%; width: 40px; height: 40px;">
+                    <i class="ri-send-plane-fill"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="{{ url_for('index') }}" class="nav-item"><i class="ri-home-4-line"></i><span>Home</span></a>
+        <a href="{{ url_for('monitor_page') }}" class="nav-item"><i class="ri-computer-line"></i><span>Monitor</span></a>
+        <div class="nav-item"><a href="{{ url_for('converter') }}" class="nav-fab"><i class="ri-add-line"></i></a></div>
+        <a href="{{ url_for('chat_page') }}" class="nav-item active"><i class="ri-chat-3-line"></i><span>Chat</span></a>
+        <a href="{{ url_for('profile_page') }}" class="nav-item"><i class="ri-user-3-line"></i><span>Profil</span></a>
+    </nav>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initChatPageSocket();
+            loadChatHistory();
+        });
+
+        async function loadChatHistory() {
+            try {
+                const res = await fetch('/api/chat_history');
+                const history = await res.json();
+                const box = document.getElementById('chat-box');
+                box.innerHTML = ''; // Bersihkan jika ada teks sebelumnya
+                history.forEach(msg => appendChatMessage(msg));
+            } catch (e) {
+                console.error("Gagal memuat history chat:", e);
+            }
+        }
+
+        function initChatPageSocket() {
+            // Karena variabel global 'socket' sudah ada dari script.js, kita langsung pakai
+            if(socket) {
+                // Matikan pendengar lama agar pesan tidak double
+                socket.off('message_response');
+            } else {
+                socket = io();
+            }
+            
+            socket.on('message_response', (data) => appendChatMessage(data));
+        }
+
+        function appendChatMessage(data) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = 'chat-msg';
+            
+            let imgContent = '';
+            if(data.image) {
+                imgContent = `<br><img src="/static/chat_images/${data.image}" style="max-width:150px; border-radius:8px; margin-top:5px;">`;
+            }
+
+            let roleBadge = data.role === 'admin' ? '<i class="ri-shield-star-fill" style="color:#ff4d4d;font-size:0.8rem;"></i> ' : '';
+            
+            div.innerHTML = `
+                <div style="font-size:0.75rem; color:#666; margin-bottom:2px;">${roleBadge}${chatEscapeHTML(data.user)} <span style="float:right;">${data.time}</span></div>
+                <div style="color:white;">${chatEscapeHTML(data.text)}${imgContent}</div>
+            `;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function sendChatMessage() {
+            const txtInput = document.getElementById('chat-input');
+            const imgInput = document.getElementById('chat-img-input');
+            const txt = txtInput.value.trim();
+            
+            if(!txt && !imgInput.files[0]) return; // Cegah spam kosong
+
+            let payload = { msg: txt };
+
+            if(imgInput.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    payload.image = e.target.result; // Ubah gambar jadi Base64
+                    socket.emit('message', payload);
+                    resetChatInput();
+                }
+                reader.readAsDataURL(imgInput.files[0]);
+            } else {
+                socket.emit('message', payload);
+                resetChatInput();
+            }
+        }
+
+        function resetChatInput() {
+            document.getElementById('chat-input').value = '';
+            document.getElementById('chat-img-input').value = '';
+            // Kembalikan warna tombol gambar ke semula
+            document.getElementById('btn-upload-img').style.color = 'white';
+        }
+
+        function previewChatImage() {
+            const file = document.getElementById('chat-img-input').files[0];
+            const btn = document.getElementById('btn-upload-img');
+            if(file) {
+                // Ubah icon jadi hijau saat gambar dipilih
+                btn.style.color = '#00ff88'; 
+            } else {
+                btn.style.color = 'white';
+            }
+        }
+
+        function handleChatEnter(e) {
+            if(e.key === 'Enter') {
+                e.preventDefault();
+                sendChatMessage();
+            }
+        }
+
+        function chatEscapeHTML(str) {
+            if(!str) return '';
+            const d = document.createElement('div'); d.textContent = str; return d.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Profil · SAMPPLAY</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="theme-{{ current_user.theme }}">
+    <div class="container" style="max-width: 600px;">
+        <h2 style="text-align: center;"><i class="ri-user-settings-line"></i> Profil</h2>
+        
+        <div style="text-align: center; margin-bottom: 20px;">
+            <span style="background: rgba(255,215,0,0.2); color: #ffd700; border: 1px solid #ffd700; padding: 6px 16px; border-radius: 20px;">
+                <i class="ri-trophy-fill"></i> {{ current_user.points }} Poin
+            </span>
+             <span style="background: rgba(0,255,136,0.2); color: #00ff88; border: 1px solid #00ff88; padding: 6px 16px; border-radius: 20px; margin-left: 5px;">
+                <i class="ri-shield-star-line"></i> {{ current_user.role|upper }}
+            </span>
+        </div>
+
+        {% if current_user.is_admin %}
+        <div style="text-align: center; margin-bottom: 20px;">
+            <a href="{{ url_for('admin_page') }}" class="btn-glow" style="background: var(--bg-dark); border: 1px solid var(--accent-primary); width: 100%;">
+                <i class="ri-admin-line"></i> Masuk Admin Panel
+            </a>
+        </div>
+        {% endif %}
+
+        <form id="profile-form" action="{{ url_for('update_profile') }}" method="POST" enctype="multipart/form-data">
+            <div class="profile-avatar-upload" onclick="document.getElementById('avatar-input').click()" style="width: 100px; height: 100px; margin: 0 auto 20px; position: relative; cursor: pointer;">
+                <div style="width:100%; height:100%; border-radius:50%; overflow:hidden; background:#333; border: 2px dashed #fff; display: flex; align-items: center; justify-content: center;">
+                    {% if current_user.profile_pic %}
+                        <img id="avatar-img" src="{{ url_for('static', filename='uploads/' + current_user.profile_pic) }}" style="width:100%; height:100%; object-fit:cover;">
+                    {% else %}
+                        <img id="avatar-img" src="" style="display:none; width:100%; height:100%; object-fit:cover;">
+                        <div id="avatar-text" style="font-size:2rem; color:#aaa;">{{ current_user.username[0]|upper }}</div>
+                    {% endif %}
+                </div>
+                <div style="position: absolute; bottom: 0; right: 0; background: var(--accent-cyan); width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                    <i class="ri-camera-line" style="color: white; font-size: 0.9rem;"></i>
+                </div>
+                <input type="file" id="avatar-input" name="avatar" accept="image/*" hidden>
+            </div>
+
+            <div class="input-group">
+                <i class="ri-user-line input-icon"></i>
+                <input type="text" name="username" class="form-input" value="{{ current_user.username }}" required>
+            </div>
+
+            <div class="input-group">
+                <i class="ri-edit-2-line input-icon" style="top: 20px; transform: none;"></i>
+                <textarea name="bio" class="form-input" style="height: 100px; resize: none; padding-top: 14px;" placeholder="Tulis bio...">{{ current_user.bio }}</textarea>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <label style="margin-bottom: 5px; display: block; font-size: 0.9rem; color: var(--text-secondary);">Tema</label>
+                <div style="position: relative;">
+                    <i class="ri-palette-line input-icon"></i>
+                    <select name="theme" class="form-input">
+                        <option value="default" {% if current_user.theme == 'default' %}selected{% endif %}>🎮 Default</option>
+                        <option value="red" {% if current_user.theme == 'red' %}selected{% endif %}>🩸 Red Sith</option>
+                        <option value="green" {% if current_user.theme == 'green' %}selected{% endif %}>🧪 Toxic Green</option>
+                        <option value="gold" {% if current_user.theme == 'gold' %}selected{% endif %}>👑 Luxury Gold</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-glow" style="width: 100%;">
+                <i class="ri-save-3-line"></i> Simpan
+            </button>
+            <a href="{{ url_for('logout') }}" style="display:block; text-align:center; margin-top:15px; color: var(--accent-danger); text-decoration: none;">
+                <i class="ri-logout-box-r-line"></i> Keluar
+            </a>
+        </form>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('index') }}" class="nav-item">
+            <i class="ri-home-4-line"></i><span>Home</span>
+        </a>
+        <a href="{{ url_for('monitor_page') }}" class="nav-item">
+            <i class="ri-computer-line"></i><span>Monitor</span>
+        </a>
+        <div class="nav-item">
+            <a href="{{ url_for('converter') }}" class="nav-fab">
+                <i class="ri-add-line"></i>
+            </a>
+        </div>
+        <a href="{{ url_for('chat_page') }}" class="nav-item">
+            <i class="ri-chat-3-line"></i><span>Chat</span>
+        </a>
+        <a href="{{ url_for('profile_page') }}" class="nav-item active">
+            <i class="ri-user-3-line"></i><span>Profil</span>
+        </a>
+    </nav>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', initProfile);
+        document.getElementById('avatar-input').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if(file){
+                const r = new FileReader();
+                r.onload = ev => {
+                    document.getElementById('avatar-img').src = ev.target.result;
+                    document.getElementById('avatar-img').style.display = 'block';
+                    if(document.getElementById('avatar-text')) document.getElementById('avatar-text').style.display = 'none';
+                }
+                r.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

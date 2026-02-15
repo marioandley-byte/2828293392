@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Monitor · SAMPPLAY</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="theme-{{ current_user.theme }}">
+    <div class="container" style="max-width: 600px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h1><i class="ri-server-line"></i> Monitor Server</h1>
+            <p style="color: var(--text-secondary);">Pantau status server SA-MP realtime.</p>
+        </div>
+
+        <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 16px; margin-bottom: 20px;">
+            <div style="display: flex; gap: 10px;">
+                <input type="text" id="samp-ip" class="form-input" placeholder="IP (ex: 127.0.0.1)">
+                <input type="text" id="samp-port" class="form-input" placeholder="Port" value="7777" style="width: 80px;">
+            </div>
+            <button onclick="addServer()" class="btn-glow" style="width: 100%; margin-top: 10px;">
+                <i class="ri-add-circle-line"></i> Tambah Server
+            </button>
+        </div>
+
+        <div id="server-list" style="display: flex; flex-direction: column; gap: 10px;">
+            <p class="loading">Memuat daftar server...</p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('index') }}" class="nav-item"><i class="ri-home-4-line"></i><span>Home</span></a>
+        <a href="{{ url_for('monitor_page') }}" class="nav-item active"><i class="ri-computer-line"></i><span>Monitor</span></a>
+        <div class="nav-item"><a href="{{ url_for('converter') }}" class="nav-fab"><i class="ri-add-line"></i></a></div>
+        <a href="{{ url_for('chat_page') }}" class="nav-item"><i class="ri-chat-3-line"></i><span>Chat</span></a>
+        <a href="{{ url_for('profile_page') }}" class="nav-item"><i class="ri-user-3-line"></i><span>Profil</span></a>
+    </nav>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', loadServers);
+        
+        async function loadServers() {
+            const el = document.getElementById('server-list');
+            el.innerHTML = '<p class="loading"><i class="ri-loader-4-line ri-spin"></i> Checking status...</p>';
+            
+            try {
+                const res = await fetch('/api/servers');
+                const servers = await res.json();
+                
+                if(servers.length === 0) {
+                    el.innerHTML = '<p style="text-align:center; color:grey;">Belum ada server ditambahkan.</p>';
+                    return;
+                }
+                
+                let html = '';
+                // Inject variable admin status dari backend ke JS via template (cara cepat)
+                const isAdmin = {{ 'true' if current_user.is_admin else 'false' }};
+                
+                servers.forEach(s => {
+                    let statusHtml = s.online 
+                        ? `<span style="color:#00ff88; font-weight:bold;">ONLINE (${s.players}/${s.max_players})</span>`
+                        : `<span style="color:#ff4d4d; font-weight:bold;">OFFLINE</span>`;
+                    
+                    let delBtn = isAdmin 
+                        ? `<button onclick="deleteServer('${s.ip}', ${s.port})" style="position:absolute; top:15px; right:15px; background:rgba(255,0,0,0.2); color:#ff4d4d; border:none; width:30px; height:30px; border-radius:8px; cursor:pointer;"><i class="ri-delete-bin-line"></i></button>`
+                        : '';
+
+                    html += `
+                    <div style="background:rgba(255,255,255,0.05); padding:15px; border-radius:12px; border:1px solid rgba(255,255,255,0.1); position:relative;">
+                        <div style="font-weight:bold; color:var(--accent-cyan); margin-bottom:5px; padding-right:30px;">${s.hostname}</div>
+                        <div style="font-size:0.85rem; color:#aaa; margin-bottom:5px;">${s.ip}:${s.port}</div>
+                        <div>${statusHtml}</div>
+                        <div style="font-size:0.75rem; color:#666; margin-top:5px;">Added by: ${s.added_by}</div>
+                        ${delBtn}
+                    </div>`;
+                });
+                el.innerHTML = html;
+            } catch(e) { el.innerHTML = 'Gagal memuat server.'; }
+        }
+
+        async function addServer() {
+            const ip = document.getElementById('samp-ip').value;
+            const port = document.getElementById('samp-port').value;
+            if(!ip || !port) return alert('Isi IP dan Port');
+            
+            const res = await fetch('/api/servers', {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ip, port})
+            });
+            if(res.ok) {
+                document.getElementById('samp-ip').value = '';
+                loadServers();
+            } else {
+                alert('Gagal menambah (Mungkin duplikat)');
+            }
+        }
+
+        async function deleteServer(ip, port) {
+            if(!confirm('Hapus server ini?')) return;
+            const res = await fetch('/api/servers', {
+                method:'DELETE', headers:{'Content-Type':'application/json'},
+                body: JSON.stringify({ip, port})
+            });
+            if(res.ok) loadServers();
+            else alert('Gagal menghapus');
+        }
+    </script>
+</body>
+</html>

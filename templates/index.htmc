@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Home · SAMPPLAY</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="theme-{{ current_user.theme }}">
+    <div class="container">
+        <header class="main-header">
+            <div class="brand-logo">
+                <h1><i class="ri-disc-line"></i> SAMPPLAY</h1>
+            </div>
+            <div class="desktop-nav">
+                </div>
+        </header>
+
+        <div class="tab-container">
+            <button class="tab-btn active" onclick="showTab('music')">
+                <i class="ri-music-2-line"></i> Library
+            </button>
+            <button class="tab-btn" onclick="showTab('rank')">
+                <i class="ri-trophy-line"></i> Leaderboard
+            </button>
+        </div>
+
+        <div id="tab-music" class="tab-content active">
+            <div id="file-list" class="file-list">
+                <p class="loading"><i class="ri-loader-4-line ri-spin"></i> Memuat musik...</p>
+            </div>
+        </div>
+
+        <div id="tab-rank" class="tab-content">
+            <div class="leaderboard-card">
+                <h2 style="text-align: center; margin-bottom: 20px;"><i class="ri-earth-line"></i> Top Users</h2>
+                <div id="leaderboard-list" class="leaderboard-list">
+                    <p class="loading">Memuat ranking...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <a href="{{ url_for('index') }}" class="nav-item active">
+            <i class="ri-home-4-line"></i><span>Home</span>
+        </a>
+        <a href="{{ url_for('monitor_page') }}" class="nav-item">
+            <i class="ri-computer-line"></i><span>Monitor</span>
+        </a>
+        <div class="nav-item">
+            <a href="{{ url_for('converter') }}" class="nav-fab">
+                <i class="ri-add-line"></i>
+            </a>
+        </div>
+        <a href="{{ url_for('chat_page') }}" class="nav-item">
+            <i class="ri-chat-3-line"></i><span>Chat</span>
+        </a>
+        <a href="{{ url_for('profile_page') }}" class="nav-item">
+            <i class="ri-user-3-line"></i><span>Profil</span>
+        </a>
+    </nav>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            loadMusicList();
+            loadLeaderboard();
+        });
+
+        function showTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+            document.getElementById('tab-'+tab).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+    </script>
+</body>
+</html>

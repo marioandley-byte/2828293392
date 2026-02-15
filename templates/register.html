@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar · SAMPPLAY</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="theme-default">
+    <div class="auth-container">
+        <div class="auth-box">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="justify-content: center; margin-bottom: 5px;">
+                    <i class="ri-rocket-line" style="color: var(--accent-primary);"></i> Join Kami
+                </h1>
+                <p style="color: var(--text-secondary);">Buat akun barumu sekarang.</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('register') }}">
+                <div class="input-group">
+                    <i class="ri-user-add-line input-icon"></i>
+                    <input type="text" name="username" class="form-input" placeholder="Pilih Username" required>
+                </div>
+                
+                <div class="input-group">
+                    <i class="ri-key-2-line input-icon"></i>
+                    <input type="password" name="password" class="form-input" placeholder="Buat Password" required>
+                </div>
+
+                {% if error %}
+                    <div class="error" style="margin-bottom: 20px; color: #ff4d4f;">
+                        <i class="ri-error-warning-line"></i> {{ error }}
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn-glow" style="width: 100%;">
+                    <i class="ri-user-smile-line"></i> DAFTAR AKUN
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 30px; font-size: 0.9rem;">
+                <span style="color: var(--text-secondary);">Sudah punya akun?</span> 
+                <a href="{{ url_for('login') }}" style="color: var(--accent-cyan); font-weight: 600;">Login Aja</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
